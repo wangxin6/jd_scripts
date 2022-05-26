@@ -10,9 +10,8 @@ declare class JDHelloWorld {
     cookiesArr: string[];
     users: User[];
     constructor(scriptName?: string);
-    getCookie(check?: boolean): Promise<void>;
-    checkCookie(cookie: string): Promise<boolean>;
-    exceptCookie(filename?: string): any;
+    getCookie(): Promise<void>;
+    exceptCookie(filename?: string): string[];
     get(url: string, headers?: any): Promise<unknown>;
     post(url: string, data: any, headers?: any): Promise<object>;
     wait(ms?: number): Promise<unknown>;
@@ -20,8 +19,11 @@ declare class JDHelloWorld {
     getShareCodePool(key: string, num: number): Promise<string[]>;
     getshareCodeHW(key: string): Promise<string[]>;
     getRandomNumberByRange(start: number, end: number): number;
-    getRandomString(e: number, word?: number): string;
     getRandomNumString(e: number): string;
+    getEncStr(fn: string, body: {
+        id?: number;
+        taskType?: number;
+    }): object;
     run(son: {
         main: any;
         help?: any;
