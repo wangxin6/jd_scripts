@@ -113,7 +113,6 @@ async function jdPlantBean() {
       await receiveNutrients();//定时领取营养液
       await doHelp();//助力
       await doTask();//做日常任务
-      await doEgg();
       await stealFriendWater();
       await doCultureBean();
       await doGetReward();
@@ -179,7 +178,7 @@ async function doGetReward() {
 
 async function doCultureBean() {
   await plantBeanIndex();
-  if ($.plantBeanIndexResult && $.plantBeanIndexResult.code === '0') {
+  if ($.plantBeanIndexResult && $.plantBeanIndexResult.code === '0' && $.plantBeanIndexResult.data) {
     const plantBeanRound = $.plantBeanIndexResult.data.roundList[1]
     if (plantBeanRound.roundState === '2') {
       //收取营养液
@@ -230,25 +229,6 @@ async function stealFriendWater() {
     }
   } else {
     console.log(`$.stealFriendList 异常： ${JSON.stringify($.stealFriendList)}`)
-  }
-}
-
-async function doEgg() {
-  await egg();
-  if ($.plantEggLotteryRes && $.plantEggLotteryRes.code === '0') {
-    if ($.plantEggLotteryRes.data.restLotteryNum > 0) {
-      const eggL = new Array($.plantEggLotteryRes.data.restLotteryNum).fill('');
-      console.log(`目前共有${eggL.length}次扭蛋的机会`)
-      for (let i = 0; i < eggL.length; i++) {
-        console.log(`开始第${i + 1}次扭蛋`);
-        await plantEggDoLottery();
-        console.log(`天天扭蛋成功：${JSON.stringify($.plantEggDoLotteryResult)}`);
-      }
-    } else {
-      console.log('暂无扭蛋机会')
-    }
-  } else {
-    console.log('查询天天扭蛋的机会失败' + JSON.stringify($.plantEggLotteryRes))
   }
 }
 
@@ -431,9 +411,8 @@ async function doHelp() {
       continue
     }
     await helpShare(plantUuid);
-    if ($.helpResult && $.helpResult.code === '0') {
-      // console.log(`助力好友结果: ${JSON.stringify($.helpResult.data.helpShareRes)}`);
-      if ($.helpResult.data.helpShareRes) {
+    if ($.helpResult && $.helpResult.code === '0' && $.helpResult.data) {
+      if ($.helpResult.data?.helpShareRes) {
         if ($.helpResult.data.helpShareRes.state === '1') {
           console.log(`助力好友${plantUuid}成功`)
           console.log(`${$.helpResult.data.helpShareRes.promptText}\n`);
