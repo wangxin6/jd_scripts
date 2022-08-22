@@ -1,11 +1,11 @@
 /**
- * 汪汪乐园-跑步+组队
+ * 汪汪乐园-跑步+组队+浏览
  * cron: 20 * * * *
  * export FP_448DE=""
  * export FP_B6AC3=""
  */
 
-import {H5ST} from "./utils/h5st_pro"
+import {H5ST} from "./utils/log"
 import {getDate} from "date-fns";
 import {JDHelloWorld, User} from "./TS_JDHelloWorld";
 
@@ -119,7 +119,47 @@ class Joy_Park_Run extends JDHelloWorld {
     try {
       this.teamTool = new H5ST('448de', this.user.UserAgent, process.env.FP_448DE || '', 'https://h5platform.jd.com/swm-stable/people-run/index?activityId=L-sOanK_5RJCz7I314FpnQ', 'https://h5platform.jd.com')
       await this.teamTool.__genAlgo()
-      let res: any = await this.team('runningMyPrize', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "pageSize": 20, "time": null, "ids": null})
+      let res: any, apTaskList: any
+
+      apTaskList = await this.api('apTaskList', {"linkId": "LsQNxL7iWDlXUs6cFl-AAg"})
+      for (let t of apTaskList.data) {
+        if (t.taskType === 'BROWSE_CHANNEL' && !t.taskFinished) {
+          console.log(t.taskTitle)
+          res = await this.api('apDoTask', {"taskType": t.taskType, "taskId": t.id, "itemId": encodeURIComponent(t.taskSourceUrl), "linkId": "LsQNxL7iWDlXUs6cFl-AAg"})
+          res.success ? console.log('任务完成') : this.o2s(res, '任务失败')
+          await this.wait(1000)
+          res = await this.api('apTaskDrawAward', {"taskType": t.taskType, "taskId": t.id, "linkId": "LsQNxL7iWDlXUs6cFl-AAg"})
+          res.success ? console.log('领奖成功', res.data[0].awardGivenNumber) : this.o2s(res, '领奖失败')
+        }
+      }
+
+      apTaskList = await this.api('apTaskList', {"linkId": "L-sOanK_5RJCz7I314FpnQ"})
+      for (let t of apTaskList.data) {
+        if (t.taskShowTitle === '逛会场得生命值' && !t.taskFinished) {
+          let apTaskDetail: any = await this.api('apTaskDetail', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "taskType": "BROWSE_CHANNEL", "taskId": t.id, "channel": 4})
+          await this.wait(1000)
+          let taskItemList = apTaskDetail.data.taskItemList
+          for (let i = apTaskDetail.data.status.userFinishedTimes; i < apTaskDetail.data.status.finishNeed; i++) {
+            console.log(taskItemList[i].itemName)
+            res = await this.api('apTaskTimeRecord', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "taskId": 817})
+            await this.wait(31000)
+
+            res = await this.api('apDoTask', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "taskType": "BROWSE_CHANNEL", "taskId": t.id, "channel": 4, "itemId": encodeURIComponent(taskItemList[i].itemId), "checkVersion": true})
+            if (res.success) {
+              console.log('任务完成')
+            } else {
+              this.o2s(res, '任务失败')
+            }
+            await this.wait(3000)
+          }
+        }
+      }
+      await this.wait(2000)
+
+      res = await this.team('runningMyPrize', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "pageSize": 20, "time": null, "ids": null})
+      // res = await this.team('runningMyPrize', {"linkId": "L-sOanK_5RJCz7I314FpnQ", "pageSize": 10, "time": 1660943842000, "ids": [1263040]})
+      // this.o2s(res)
+
       let sum: number = 0, success: number = 0
       rewardAmount = res.data.rewardAmount
       if (res.data.runningCashStatus.currentEndTime && res.data.runningCashStatus.status === 0) {
@@ -195,7 +235,7 @@ class Joy_Park_Run extends JDHelloWorld {
 
       res = await this.runningPageHome()
       for (let i = 0; i < energy; i++) {
-        if (res.data.runningHomeInfo.nextRunningTime / 1000 < 3000)
+        if (res.data.runningHomeInfo.nextRunningTime / 1000 < 3000 || new Date().getHours() > 15)
           break
         console.log('💉')
         res = await this.api('runningUseEnergyBar', {"linkId": "L-sOanK_5RJCz7I314FpnQ"})
